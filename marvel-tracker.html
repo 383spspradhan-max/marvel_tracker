@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Track every Marvel movie, series, and animated show you've watched — MCU, Sony's Spider-Man films, Fox's X-Men era, Blade, and more, organized by universe.">
+<title>Marvel Watch Tracker — All Universes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+:root{
+  --ink:#121214;
+  --panel:#1c1c20;
+  --card:#232328;
+  --card-hover:#2a2a30;
+  --red:#E0262B;
+  --red-dim:#7a1518;
+  --gold:#F0B429;
+  --text:#F2F0E9;
+  --text-dim:#9B9BA5;
+  --line:#333338;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text);
+  font-family:'Work Sans',sans-serif;
+  padding:28px 16px 80px;
+}
+.wrap{max-width:960px;margin:0 auto;}
+
+.masthead{
+  border-bottom:4px solid var(--red);
+  padding-bottom:14px;
+  margin-bottom:20px;
+}
+h1{
+  font-family:'Anton',sans-serif;
+  font-size:36px;
+  letter-spacing:1px;
+  margin:0;
+  text-transform:uppercase;
+  line-height:0.95;
+}
+h1 span{color:var(--red);}
+.subtitle{color:var(--text-dim);font-size:13px;margin-top:4px;transition:color .15s ease;}
+.masthead:hover .subtitle{color:var(--text);}
+
+.overall{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 18px;
+  margin-bottom:20px;
+}
+.overall-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.overall-top .label{font-family:'Anton',sans-serif;font-size:15px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-dim);}
+.overall-top .count{font-size:22px;font-weight:700;color:var(--gold);}
+.bar-track{height:10px;background:var(--card);border-radius:6px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%;transition:width .3s ease;border-radius:6px;}
+
+.controls{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.controls input[type=text]{
+  flex:1;min-width:180px;background:var(--panel);border:1px solid var(--line);
+  color:var(--text);padding:10px 14px;border-radius:8px;font-size:14px;font-family:'Work Sans',sans-serif;
+}
+.controls input[type=text]:focus{outline:none;border-color:var(--red);}
+.controls button{
+  background:var(--panel);border:1px solid var(--line);color:var(--text-dim);
+  padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Work Sans',sans-serif;
+}
+.controls button:hover{color:var(--text);border-color:var(--red);}
+
+.add-form{display:flex;flex-direction:column;gap:10px;}
+.add-row{display:flex;gap:10px;flex-wrap:wrap;}
+.add-row input[type=text]{
+  flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);
+  color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;font-family:'Work Sans',sans-serif;
+}
+.add-row input[type=text]:focus{outline:none;border-color:var(--red);}
+.add-row input[type=text]:disabled{opacity:0.5;cursor:not-allowed;}
+#addSubmitBtn{
+  background:var(--red);border:1px solid var(--red);color:#fff;
+  padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Work Sans',sans-serif;
+}
+#addSubmitBtn:hover{opacity:0.9;}
+#cancelEditBtn{
+  background:var(--card);border:1px solid var(--line);color:var(--text-dim);
+  padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Work Sans',sans-serif;
+}
+#cancelEditBtn:hover{color:var(--text);border-color:var(--red);}
+
+.page-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  align-items:center;justify-content:center;z-index:90;padding:16px;
+}
+.page-overlay.open{display:flex;}
+.page-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:480px;width:100%;}
+.page-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px;border-bottom:1px solid var(--line);
+}
+.page-header h3{font-family:'Anton',sans-serif;font-size:16px;letter-spacing:0.5px;text-transform:uppercase;margin:0;}
+.page-close{
+  background:transparent;border:1px solid var(--line);color:var(--text-dim);
+  width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;
+}
+.page-close:hover{color:var(--text);border-color:var(--red);}
+.page-body{padding:18px;}
+.page-text{font-size:13px;color:var(--text-dim);line-height:1.5;margin:0 0 14px;}
+#pageImport button, #pageExport button{
+  background:var(--red);border:1px solid var(--red);color:#fff;
+  padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Work Sans',sans-serif;
+}
+#pageImport button:hover, #pageExport button:hover{opacity:0.9;}
+
+.item-remove{
+  position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;
+  background:var(--line);color:var(--text-dim);font-size:11px;line-height:18px;text-align:center;
+  cursor:pointer;opacity:0;transition:opacity .15s ease;
+}
+.item:hover .item-remove{opacity:1;}
+.item-remove:hover{background:var(--red);color:#fff;}
+
+.item-edit{
+  position:absolute;top:6px;right:28px;width:18px;height:18px;border-radius:50%;
+  background:var(--line);color:var(--text-dim);font-size:10px;line-height:18px;text-align:center;
+  cursor:pointer;opacity:0;transition:opacity .15s ease;
+}
+.item:hover .item-edit{opacity:1;}
+.item-edit:hover{background:var(--gold);color:#1c1c20;}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;}
+.chip{
+  font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;
+  border:1.5px solid var(--chip-color,var(--line));color:var(--chip-color,var(--text-dim));
+  cursor:pointer;background:transparent;transition:all .15s ease;user-select:none;
+}
+.chip.off{opacity:0.35;}
+.chip:hover{opacity:1;}
+
+.universe{margin-bottom:28px;}
+.universe-head{
+  display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 12px;
+  border-left:5px solid var(--u-color);background:var(--panel);border-radius:8px;margin-bottom:12px;user-select:none;
+}
+.universe-head:hover h2{color:var(--gold);}
+.universe-head:hover .eyebrow{color:var(--gold);}
+.universe-head .eyebrow{font-family:'Anton',sans-serif;font-size:10px;letter-spacing:2px;color:var(--red);text-transform:uppercase;}
+.universe-head h2{font-family:'Anton',sans-serif;font-size:19px;letter-spacing:0.5px;text-transform:uppercase;margin:2px 0 0;transition:color .15s ease;}
+.universe-head .mini-count{font-size:13px;color:var(--text-dim);font-variant-numeric:tabular-nums;margin-left:auto;}
+.universe-toggle{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;border:2px solid var(--text-dim);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:transparent;
+  cursor:pointer;transition:all .15s ease;
+}
+.universe-toggle:hover{border-color:var(--red);}
+.universe-toggle.all-done{border-color:var(--gold);background:var(--gold);color:#1c1c20;}
+
+.group-label-row{display:flex;align-items:center;gap:8px;margin:14px 0 8px;}
+.group-label-row:hover .group-label{color:var(--gold);}
+.group-toggle{
+  flex-shrink:0;width:16px;height:16px;border-radius:50%;border:2px solid var(--text-dim);
+  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:transparent;
+  cursor:pointer;transition:all .15s ease;
+}
+.group-toggle:hover{border-color:var(--red);}
+.group-toggle.all-done{border-color:var(--gold);background:var(--gold);color:#1c1c20;}
+.universe-head .chev{color:var(--text-dim);transition:transform .2s ease;font-size:12px;}
+.universe.collapsed .chev{transform:rotate(-90deg);}
+.universe.collapsed .u-body{display:none;}
+.universe.hidden-universe{display:none;}
+
+.group-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);font-weight:600;transition:color .15s ease;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
+
+.item{
+  position:relative;display:flex;align-items:center;gap:12px;background:var(--card);
+  border:1px solid var(--line);border-left:3px solid var(--u-color);border-radius:8px;
+  padding:12px 14px;cursor:pointer;transition:background .15s ease,border-color .15s ease;overflow:hidden;
+}
+.item:hover{background:var(--card-hover);}
+.item.done{border-color:var(--gold);}
+.item.hidden{display:none;}
+
+.check{
+  flex-shrink:0;width:24px;height:24px;border-radius:50%;border:2px solid var(--text-dim);
+  display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:transparent;transition:all .15s ease;
+}
+.item.done .check{border-color:var(--gold);background:var(--gold);color:#1c1c20;}
+
+.item-text{flex:1;min-width:0;}
+.item-title{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s ease;}
+.item:hover .item-title{color:var(--gold);}
+.item.done .item-title{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--red-dim);}
+.item.done:hover .item-title{color:var(--gold);}
+.item-year{font-size:12px;color:var(--text-dim);margin-top:1px;}
+
+.stamp{
+  position:absolute;right:-6px;top:50%;transform:translateY(-50%) rotate(-12deg);
+  font-family:'Anton',sans-serif;font-size:10px;letter-spacing:1px;color:var(--red);
+  border:2px solid var(--red);border-radius:4px;padding:2px 8px;opacity:0;transition:opacity .15s ease;
+  text-transform:uppercase;pointer-events:none;
+}
+.item.done .stamp{opacity:0.85;}
+
+footer{text-align:center;color:var(--text-dim);font-size:12px;margin-top:30px;}
+
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  align-items:center;justify-content:center;z-index:100;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:22px;max-width:360px;width:100%;
+}
+.modal-box p{margin:0 0 18px;font-size:14px;color:var(--text);line-height:1.5;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;}
+.modal-actions button{
+  padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Work Sans',sans-serif;
+  border:1px solid var(--line);background:var(--card);color:var(--text-dim);
+}
+.modal-actions button:hover{color:var(--text);border-color:var(--red);}
+#confirmOkBtn{background:var(--red);border-color:var(--red);color:#fff;}
+#confirmOkBtn:hover{opacity:0.9;}
+
+.controls button:disabled{opacity:0.35;cursor:not-allowed;}
+.controls button:disabled:hover{color:var(--text-dim);border-color:var(--line);}
+
+.profile{
+  display:flex;align-items:center;gap:14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:14px 18px;margin-bottom:20px;
+}
+.profile-avatar{
+  flex-shrink:0;width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--red),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Anton',sans-serif;font-size:18px;color:#fff;text-transform:uppercase;
+}
+.profile-info{flex:1;min-width:0;}
+#profileName{
+  width:100%;max-width:260px;background:transparent;border:none;border-bottom:1px solid transparent;
+  color:var(--text);font-size:15px;font-weight:600;font-family:'Work Sans',sans-serif;padding:2px 0;
+}
+#profileName:hover, #profileName:focus{border-bottom-color:var(--line);outline:none;}
+#profileName::placeholder{color:var(--text-dim);font-weight:400;}
+.profile-stats{font-size:12px;color:var(--text-dim);margin-top:4px;}
+
+.profile-menu-wrap{position:relative;flex-shrink:0;}
+.profile-menu-btn{
+  background:transparent;border:1px solid var(--line);color:var(--text-dim);
+  width:34px;height:34px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1;
+}
+.profile-menu-btn:hover{color:var(--text);border-color:var(--red);}
+.profile-menu{
+  display:none;position:absolute;right:0;top:calc(100% + 6px);
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  min-width:210px;padding:6px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.profile-menu.open{display:block;}
+.profile-menu-item{
+  display:block;width:100%;text-align:left;
+  padding:9px 10px;border-radius:6px;font-size:13px;color:var(--text);
+  background:transparent;border:none;cursor:pointer;font-family:'Work Sans',sans-serif;
+}
+.profile-menu-item:hover{background:var(--panel);color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Marvel<span>.</span> Watch Tracker</h1>
+    <div class="subtitle">Every Marvel-derived universe — MCU, Sony's Spider-Man films, Fox's X-Men era, Blade, the Netflix/ABC shows, and more</div>
+  </div>
+
+  <div class="profile">
+    <div class="profile-avatar" id="profileAvatar">M</div>
+    <div class="profile-info">
+      <input type="text" id="profileName" placeholder="Your name">
+      <div class="profile-stats" id="profileStats">0 of 0 watched (0%)</div>
+    </div>
+    <div class="profile-menu-wrap">
+      <button class="profile-menu-btn" id="profileMenuBtn" title="More">&#8942;</button>
+      <div class="profile-menu" id="profileMenu">
+        <button class="profile-menu-item" data-page="add">+ Add title</button>
+        <button class="profile-menu-item" data-page="import">Import progress</button>
+        <button class="profile-menu-item" data-page="export">Export progress</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overall">
+    <div class="overall-top">
+      <span class="label">Overall progress</span>
+      <span class="count" id="overallCount">0 / 0</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="overallBar"></div></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="searchBox" placeholder="Search titles...">
+    <button id="markAllBtn">Mark all visible watched</button>
+    <button id="undoMarkAllBtn" disabled>Undo mark all</button>
+    <button id="undoDeleteBtn" disabled>Undo delete</button>
+  </div>
+
+  <div class="page-overlay" id="pageOverlay">
+    <div class="page-box">
+      <div class="page-header">
+        <h3 id="pageTitle">Add title</h3>
+        <button class="page-close" id="pageCloseBtn" title="Close">&#10005;</button>
+      </div>
+      <div class="page-body">
+
+        <div class="page-section" id="pageAdd">
+          <div class="add-form">
+            <div class="add-row">
+              <input type="text" id="addUniverse" placeholder="Universe (type existing or a new name)" list="universeList">
+              <datalist id="universeList"></datalist>
+              <input type="text" id="addGroup" placeholder="Section (e.g. Phase 6, Films)" list="groupList">
+              <datalist id="groupList"></datalist>
+            </div>
+            <div class="add-row">
+              <input type="text" id="addTitle" placeholder="Title">
+              <input type="text" id="addYear" placeholder="Year (blank = TBA)" maxlength="4" inputmode="numeric" style="max-width:110px;">
+              <button id="addSubmitBtn">Add</button>
+              <button id="cancelEditBtn" style="display:none;">Cancel edit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-section" id="pageImport" style="display:none;">
+          <p class="page-text">Importing replaces your current checkmarks, custom titles, and profile name with what's saved in the chosen file.</p>
+          <button id="importBtn">Choose file to import</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </div>
+
+        <div class="page-section" id="pageExport" style="display:none;">
+          <p class="page-text">Downloads your checkmarks, custom titles, and profile name as a backup file you can re-import later or on another copy of this tracker.</p>
+          <button id="exportBtn">Download progress file</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="chips" id="chipRow"></div>
+
+  <div id="universeContainer"></div>
+
+  <footer>Tap a title to check it off &middot; progress is saved automatically &middot; use the chips above to focus on one universe</footer>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal-box">
+    <p id="confirmMessage">Are you sure?</p>
+    <div class="modal-actions">
+      <button id="confirmCancelBtn">Cancel</button>
+      <button id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE_UNIVERSES = [
+  {
+    id:"mcu", name:"Marvel Cinematic Universe", eyebrow:"MCU — 2008 to present", color:"#E0262B",
+    groups:[
+      {label:"Phase 1", items:[["Iron Man","2008"],["The Incredible Hulk","2008"],["Iron Man 2","2010"],["Thor","2011"],["Captain America: The First Avenger","2011"],["The Avengers","2012"]]},
+      {label:"Phase 2", items:[["Iron Man 3","2013"],["Thor: The Dark World","2013"],["Captain America: The Winter Soldier","2014"],["Guardians of the Galaxy","2014"],["Avengers: Age of Ultron","2015"],["Ant-Man","2015"]]},
+      {label:"Phase 3", items:[["Captain America: Civil War","2016"],["Doctor Strange","2016"],["Guardians of the Galaxy Vol. 2","2017"],["Spider-Man: Homecoming","2017"],["Thor: Ragnarok","2017"],["Black Panther","2018"],["Avengers: Infinity War","2018"],["Ant-Man and the Wasp","2018"],["Captain Marvel","2019"],["Avengers: Endgame","2019"],["Spider-Man: Far From Home","2019"]]},
+      {label:"Phase 4 — Movies", items:[["Black Widow","2021"],["Shang-Chi and the Legend of the Ten Rings","2021"],["Eternals","2021"],["Spider-Man: No Way Home","2021"],["Doctor Strange in the Multiverse of Madness","2022"],["Thor: Love and Thunder","2022"],["Black Panther: Wakanda Forever","2022"]]},
+      {label:"Phase 4 — Series", items:[["WandaVision","2021"],["The Falcon and the Winter Soldier","2021"],["Loki (Season 1)","2021"],["Hawkeye","2021"],["Moon Knight","2022"],["Ms. Marvel","2022"],["She-Hulk: Attorney at Law","2022"],["Secret Invasion","2023"]]},
+      {label:"Phase 4 — Animation & specials", items:[["What If...? (Season 1)","2021"],["I Am Groot (Season 1)","2022"],["What If...? (Season 2)","2023"],["Werewolf by Night","2022"],["The Guardians of the Galaxy Holiday Special","2022"]]},
+      {label:"Phase 5 — Movies", items:[["Ant-Man and the Wasp: Quantumania","2023"],["Guardians of the Galaxy Vol. 3","2023"],["The Marvels","2023"],["Deadpool & Wolverine","2024"],["Captain America: Brave New World","2025"],["Thunderbolts*","2025"]]},
+      {label:"Phase 5 — Series", items:[["Loki (Season 2)","2023"],["Echo","2024"],["Agatha All Along","2024"],["Daredevil: Born Again (Season 1)","2025"],["Ironheart","2025"]]},
+      {label:"Phase 5 — Animation", items:[["I Am Groot (Season 2)","2023"],["What If...? (Season 3)","2024"],["X-Men '97 (Season 1)","2024"],["Your Friendly Neighborhood Spider-Man (Season 1)","2025"],["Marvel Zombies","2025"]]},
+      {label:"Phase 6", items:[["Eyes of Wakanda","2025"],["The Fantastic Four: First Steps","2025"],["Spider-Man: Brand New Day","2026"],["Avengers: Doomsday","2026"],["Wonder Man","2026"],["Daredevil: Born Again (Season 2)","2026"],["Your Friendly Neighborhood Spider-Man (Season 2)","2026"],["VisionQuest","2026"],["X-Men '97 (Season 2)","2026"],["The Punisher: One Last Kill","2026"]]},
+      {label:"Phase 7 — announced", items:[["Avengers: Secret Wars","2027"],["Ghost Rider","2028"],["Black Panther 3","2028"],["X-Men (MCU reboot, date TBA)","TBA"]]}
+    ]
+  },
+  {
+    id:"raimi", name:"Sam Raimi's Spider-Man Trilogy", eyebrow:"Sony, pre-shared universe", color:"#1D9E75",
+    groups:[{label:"Films", items:[["Spider-Man","2002"],["Spider-Man 2","2004"],["Spider-Man 3","2007"]]}]
+  },
+  {
+    id:"asm", name:"The Amazing Spider-Man", eyebrow:"Sony, pre-shared universe", color:"#0F6E56",
+    groups:[{label:"Films", items:[["The Amazing Spider-Man","2012"],["The Amazing Spider-Man 2","2014"]]}]
+  },
+  {
+    id:"ssu", name:"Sony's Spider-Man Universe", eyebrow:"SSU — live action", color:"#378ADD",
+    groups:[{label:"Films", items:[["Venom","2018"],["Venom: Let There Be Carnage","2021"],["Morbius","2022"],["Madame Web","2024"],["Kraven the Hunter","2024"],["Venom: The Last Dance","2024"]]}]
+  },
+  {
+    id:"spiderverse", name:"Spider-Verse", eyebrow:"Sony Pictures Animation", color:"#7F77DD",
+    groups:[{label:"Films", items:[["Spider-Man: Into the Spider-Verse","2018"],["Spider-Man: Across the Spider-Verse","2023"],["Spider-Man: Beyond the Spider-Verse","2027"]]}]
+  },
+  {
+    id:"foxmen", name:"Fox's X-Men Universe", eyebrow:"20th Century Fox, 2000–2020", color:"#EF9F27",
+    groups:[
+      {label:"Main series", items:[["X-Men","2000"],["X2: X-Men United","2003"],["X-Men: The Last Stand","2006"],["X-Men Origins: Wolverine","2009"],["X-Men: First Class","2011"],["The Wolverine","2013"],["X-Men: Days of Future Past","2014"],["X-Men: Apocalypse","2016"],["Dark Phoenix","2019"]]},
+      {label:"Spinoffs", items:[["Deadpool","2016"],["Logan","2017"],["Deadpool 2","2018"],["The New Mutants","2020"]]}
+    ]
+  },
+  {
+    id:"foxff", name:"Fantastic Four (Fox era)", eyebrow:"20th Century Fox", color:"#BA7517",
+    groups:[
+      {label:"Films", items:[["Fantastic Four","2005"],["Fantastic Four: Rise of the Silver Surfer","2007"]]}
+    ]
+  },
+  {
+    id:"blade", name:"Blade Trilogy", eyebrow:"New Line Cinema", color:"#993C1D",
+    groups:[{label:"Films", items:[["Blade","1998"],["Blade II","2002"],["Blade: Trinity","2004"]]}]
+  },
+  {
+    id:"nettv", name:"Marvel Television Universe", eyebrow:"ABC / Netflix / Hulu, 2013–2020", color:"#D4537E",
+    groups:[
+      {label:"ABC", items:[["Agents of S.H.I.E.L.D.","2013"],["Agent Carter","2015"],["Inhumans","2017"]]},
+      {label:"Netflix — Defenders Saga", items:[["Daredevil","2015"],["Jessica Jones","2015"],["Luke Cage","2016"],["Iron Fist","2017"],["The Defenders","2017"],["The Punisher","2017"]]},
+      {label:"Hulu / Freeform", items:[["Runaways","2017"],["Cloak & Dagger","2018"],["Helstrom","2020"]]}
+    ]
+  },
+  {
+    id:"spidernoir", name:"Spider-Noir", eyebrow:"Prime Video / MGM+, unconnected", color:"#D97757",
+    groups:[{label:"Series", items:[["Spider-Noir (Season 1)","2026"]]}]
+  },
+  {
+    id:"ghostrider", name:"Ghost Rider", eyebrow:"Sony / Columbia, unconnected", color:"#888780",
+    groups:[{label:"Films", items:[["Ghost Rider","2007"],["Ghost Rider: Spirit of Vengeance","2012"]]}]
+  }
+];
+
+const STORAGE_KEY = "marvel-tracker-checked-v2";
+const CUSTOM_KEY = "marvel-tracker-custom-items";
+const PROFILE_KEY = "marvel-tracker-profile-name";
+const OVERRIDES_KEY = "marvel-tracker-title-overrides";
+const APP_ID = "marvel-watch-tracker-v1";
+let checkedIds = {};
+let customItems = [];
+let customIds = new Set();
+let overrides = {};
+let overriddenIds = new Map();
+let UNIVERSES = [];
+let activeUniverses = new Set(BASE_UNIVERSES.map(u=>u.id));
+
+function buildId(uid, group, title, year){
+  return (uid+"|"+group+"|"+title+"|"+year).replace(/\s+/g,"_");
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const EXTRA_COLORS = ["#7F77DD","#3478DD","#1D9E75","#EF9F27","#D4537E","#993C1D","#5DCAA5","#D97757","#BA7517","#4FA3E3","#C2554D","#8FBF3F"];
+function colorForName(name){
+  let hash = 0;
+  for(let i=0;i<name.length;i++){ hash = (hash*31 + name.charCodeAt(i)) >>> 0; }
+  return EXTRA_COLORS[hash % EXTRA_COLORS.length];
+}
+function slugify(name){
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-+|-+$)/g,"");
+  return base || ("universe-"+Date.now());
+}
+
+function renderUniverse(u){
+  const totalCount = u.groups.reduce((n,g)=>n+g.items.length,0);
+  const allDone = totalCount>0 && u.groups.every(g=>g.items.every(([title,year])=>checkedIds[buildId(u.id,g.label,title,year)]));
+  let html = `<div class="universe" data-uid="${u.id}" style="--u-color:${u.color}">
+    <div class="universe-head">
+      <div>
+        <div class="eyebrow" title="${escapeHtml(u.eyebrow)}">${escapeHtml(u.eyebrow)}</div>
+        <h2 title="${escapeHtml(u.name)}">${escapeHtml(u.name)}</h2>
+      </div>
+      <span class="mini-count" data-role="mini-count">0 / ${totalCount}</span>
+      <span class="universe-toggle${allDone ? " all-done" : ""}" data-scope="universe" data-uid="${u.id}" title="Mark whole universe watched">&#10003;</span>
+      <span class="chev">&#9660;</span>
+    </div>
+    <div class="u-body">`;
+  u.groups.forEach(g=>{
+    const groupDone = g.items.length>0 && g.items.every(([title,year])=>checkedIds[buildId(u.id,g.label,title,year)]);
+    html += `<div class="group-block" data-group="${escapeHtml(g.label)}">
+      <div class="group-label-row">
+        <span class="group-toggle${groupDone ? " all-done" : ""}" data-scope="group" data-uid="${u.id}" data-group="${escapeHtml(g.label)}" title="Mark whole section watched">&#10003;</span>
+        <span class="group-label" title="${escapeHtml(g.label)}">${escapeHtml(g.label)}</span>
+      </div>
+      <div class="grid">`;
+    g.items.forEach(([title,year])=>{
+      const id = buildId(u.id, g.label, title, year);
+      const removable = customIds.has(id);
+      html += `<div class="item" data-id="${id}" data-title="${escapeHtml(title.toLowerCase())}" title="${escapeHtml(title)} (${escapeHtml(year)})">
+        <div class="check">&#10003;</div>
+        <div class="item-text">
+          <div class="item-title">${escapeHtml(title)}</div>
+          <div class="item-year">${escapeHtml(year)}</div>
+        </div>
+        <div class="stamp">Watched</div>
+        <div class="item-edit" data-edit-id="${id}" title="Edit">&#9998;</div>
+        ${removable ? `<div class="item-remove" data-remove-id="${id}" title="Remove">&#10005;</div>` : ""}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function renderChips(){
+  const row = document.getElementById("chipRow");
+  row.innerHTML = UNIVERSES.map(u=>
+    `<button class="chip" data-uid="${u.id}" style="--chip-color:${u.color}">${escapeHtml(u.name)}</button>`
+  ).join("");
+  row.querySelectorAll(".chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      const uid = chip.getAttribute("data-uid");
+      if(activeUniverses.has(uid)){ activeUniverses.delete(uid); chip.classList.add("off"); }
+      else { activeUniverses.add(uid); chip.classList.remove("off"); }
+      applyUniverseFilter();
+    });
+  });
+}
+
+function applyUniverseFilter(){
+  document.querySelectorAll(".universe").forEach(el=>{
+    const uid = el.getAttribute("data-uid");
+    el.classList.toggle("hidden-universe", !activeUniverses.has(uid));
+  });
+}
+
+function renderAll(){
+  const container = document.getElementById("universeContainer");
+  container.innerHTML = UNIVERSES.map(renderUniverse).join("");
+  document.querySelectorAll(".item").forEach(el=>{
+    const id = el.getAttribute("data-id");
+    if(checkedIds[id]) el.classList.add("done");
+    el.addEventListener("click", (e)=>{
+      if(e.target.closest(".item-remove") || e.target.closest(".item-edit")) return;
+      toggleItem(id, el);
+    });
+  });
+  document.querySelectorAll(".item-remove").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      removeCustomItem(el.getAttribute("data-remove-id"));
+    });
+  });
+  document.querySelectorAll(".item-edit").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      startEdit(el.getAttribute("data-edit-id"));
+    });
+  });
+  document.querySelectorAll(".universe-toggle, .group-toggle").forEach(el=>{
+    el.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      toggleScope(el);
+    });
+  });
+  document.querySelectorAll(".universe-head").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      el.parentElement.classList.toggle("collapsed");
+    });
+  });
+  updateCounts();
+}
+
+function updateCounts(){
+  const allItems = document.querySelectorAll(".item");
+  let doneTotal = 0;
+  let completedUniverseCount = 0;
+  document.querySelectorAll(".universe").forEach(uEl=>{
+    const items = uEl.querySelectorAll(".item");
+    let done = 0;
+    items.forEach(it=>{ if(it.classList.contains("done")) done++; });
+    doneTotal += done;
+    if(items.length>0 && done===items.length) completedUniverseCount++;
+    uEl.querySelector('[data-role="mini-count"]').textContent = `${done} / ${items.length}`;
+    const uToggle = uEl.querySelector(".universe-toggle");
+    if(uToggle) uToggle.classList.toggle("all-done", items.length>0 && done===items.length);
+  });
+  document.querySelectorAll(".group-block").forEach(gb=>{
+    const items = gb.querySelectorAll(".item");
+    const done = [...items].filter(it=>it.classList.contains("done")).length;
+    const gToggle = gb.querySelector(".group-toggle");
+    if(gToggle) gToggle.classList.toggle("all-done", items.length>0 && done===items.length);
+  });
+  const total = allItems.length;
+  document.getElementById("overallCount").textContent = `${doneTotal} / ${total}`;
+  document.getElementById("overallBar").style.width = (total ? doneTotal/total*100 : 0) + "%";
+
+  const pct = total ? Math.round(doneTotal/total*100) : 0;
+  const statsEl = document.getElementById("profileStats");
+  if(statsEl){
+    statsEl.textContent = `${doneTotal} of ${total} watched (${pct}%) · ${completedUniverseCount} universe${completedUniverseCount===1?"":"s"} completed`;
+  }
+}
+
+async function toggleScope(scopeEl){
+  const scope = scopeEl.getAttribute("data-scope");
+  const uid = scopeEl.getAttribute("data-uid");
+  let items;
+  if(scope === "universe"){
+    items = document.querySelectorAll(`.universe[data-uid="${uid}"] .item`);
+  } else {
+    const group = scopeEl.getAttribute("data-group");
+    const block = [...document.querySelectorAll(`.universe[data-uid="${uid}"] .group-block`)]
+      .find(b=>b.getAttribute("data-group")===group);
+    items = block ? block.querySelectorAll(".item") : [];
+  }
+  const itemsArr = [...items];
+  const allDone = itemsArr.length>0 && itemsArr.every(it=>it.classList.contains("done"));
+  itemsArr.forEach(it=>{
+    const id = it.getAttribute("data-id");
+    if(allDone){ it.classList.remove("done"); delete checkedIds[id]; }
+    else { it.classList.add("done"); checkedIds[id] = true; }
+  });
+  updateCounts();
+  await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+}
+
+async function storageGet(key){
+  if(window.storage){
+    try{ return await window.storage.get(key); }catch(e){ return null; }
+  }
+  try{
+    const v = localStorage.getItem(key);
+    return v ? {value:v} : null;
+  }catch(e){ return null; }
+}
+
+async function storageSet(key, value){
+  if(window.storage){
+    try{ return await window.storage.set(key, value); }catch(e){ console.error("Storage save failed", e); return null; }
+  }
+  try{
+    localStorage.setItem(key, value);
+    return {value};
+  }catch(e){ console.error("Storage save failed", e); return null; }
+}
+
+async function toggleItem(id, el){
+  const nowDone = !el.classList.contains("done");
+  el.classList.toggle("done", nowDone);
+  if(nowDone){ checkedIds[id] = true; } else { delete checkedIds[id]; }
+  updateCounts();
+  await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+}
+
+document.getElementById("searchBox").addEventListener("input", (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".item").forEach(el=>{
+    const match = !q || el.getAttribute("data-title").includes(q);
+    el.classList.toggle("hidden", !match);
+  });
+  document.querySelectorAll(".universe").forEach(uEl=>{
+    const anyVisible = [...uEl.querySelectorAll(".item")].some(el=>!el.classList.contains("hidden"));
+    uEl.style.display = anyVisible ? "" : "none";
+  });
+});
+
+let lastMarkAllChangedIds = null;
+
+document.getElementById("markAllBtn").addEventListener("click", async ()=>{
+  const confirmed = await showConfirm("Mark all currently visible titles as watched?", "Mark all");
+  if(!confirmed) return;
+  const visible = [...document.querySelectorAll(".item")].filter(el=>{
+    return !el.classList.contains("hidden") && el.closest(".universe").style.display !== "none" && !el.closest(".universe").classList.contains("hidden-universe");
+  });
+  const changed = [];
+  visible.forEach(el=>{
+    const id = el.getAttribute("data-id");
+    if(!checkedIds[id]) changed.push(id);
+    el.classList.add("done");
+    checkedIds[id] = true;
+  });
+  lastMarkAllChangedIds = changed;
+  document.getElementById("undoMarkAllBtn").disabled = changed.length === 0;
+  updateCounts();
+  await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+});
+
+document.getElementById("undoMarkAllBtn").addEventListener("click", async ()=>{
+  if(!lastMarkAllChangedIds || lastMarkAllChangedIds.length === 0) return;
+  const idsToUndo = new Set(lastMarkAllChangedIds);
+  document.querySelectorAll(".item").forEach(el=>{
+    const id = el.getAttribute("data-id");
+    if(idsToUndo.has(id)){ el.classList.remove("done"); delete checkedIds[id]; }
+  });
+  lastMarkAllChangedIds = null;
+  document.getElementById("undoMarkAllBtn").disabled = true;
+  updateCounts();
+  await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+});
+
+
+function showModal(message, {okText="Confirm", cancelText="Cancel", showCancel=true} = {}){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById("confirmOverlay");
+    const okBtn = document.getElementById("confirmOkBtn");
+    const cancelBtn = document.getElementById("confirmCancelBtn");
+    document.getElementById("confirmMessage").textContent = message;
+    okBtn.textContent = okText;
+    cancelBtn.textContent = cancelText;
+    cancelBtn.style.display = showCancel ? "" : "none";
+    overlay.classList.add("open");
+    function cleanup(result){
+      overlay.classList.remove("open");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onOverlay);
+      resolve(result);
+    }
+    function onOk(){ cleanup(true); }
+    function onCancel(){ cleanup(false); }
+    function onOverlay(e){ if(e.target === overlay) cleanup(false); }
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onOverlay);
+  });
+}
+
+function showConfirm(message, okText){
+  return showModal(message, {okText: okText || "Confirm", showCancel:true});
+}
+
+function showAlert(message){
+  return showModal(message, {okText:"OK", showCancel:false});
+}
+
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  const profileName = document.getElementById("profileName").value;
+  const payload = {appId: APP_ID, checkedIds, customItems, profileName};
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "marvel-tracker-progress.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById("importBtn").addEventListener("click", ()=>{
+  document.getElementById("importFile").click();
+});
+
+document.getElementById("importFile").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const imported = JSON.parse(text);
+
+    if(imported && typeof imported === "object" && "appId" in imported && imported.appId !== APP_ID){
+      await showAlert(`This file is from a different tracker (identified as "${imported.appId}"), not the Marvel Watch Tracker. Import cancelled to avoid mixing in unrelated titles and progress.`);
+      e.target.value = "";
+      return;
+    }
+
+    const isFullFormat = imported && typeof imported === "object" &&
+      ("checkedIds" in imported || "customItems" in imported || "profileName" in imported);
+
+    if(isFullFormat && !("appId" in imported)){
+      const proceed = await showConfirm(
+        "This file doesn't identify which tracker it came from. If it's not from this Marvel tracker, importing it could mix in unrelated data. Continue anyway?",
+        "Import anyway"
+      );
+      if(!proceed){ e.target.value = ""; return; }
+    }
+
+    const confirmMsg = isFullFormat
+      ? "Import this file? It will replace your current checkmarks, custom titles, and profile name with what's saved in this file — including anything you've unticked or removed."
+      : "Import this file? It will replace your current checkmarks with what's saved in this file.";
+    const confirmed = await showConfirm(confirmMsg, "Import");
+    if(!confirmed){ e.target.value = ""; return; }
+
+    if(isFullFormat){
+      checkedIds = imported.checkedIds || {};
+      customItems = imported.customItems || [];
+      if(typeof imported.profileName === "string"){
+        document.getElementById("profileName").value = imported.profileName;
+        updateProfileAvatar();
+        await storageSet(PROFILE_KEY, imported.profileName);
+      }
+    } else {
+      checkedIds = imported || {};
+    }
+
+    await saveCustomItems();
+    rebuildUniverses();
+    renderChips();
+    updateUniverseList();
+    updateGroupList();
+    renderAll();
+    await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+    lastMarkAllChangedIds = null;
+    document.getElementById("undoMarkAllBtn").disabled = true;
+    lastRemovedItem = null;
+    document.getElementById("undoDeleteBtn").disabled = true;
+  }catch(err){
+    console.error("Import failed", err);
+  }
+  e.target.value = "";
+});
+
+function rebuildUniverses(){
+  UNIVERSES = JSON.parse(JSON.stringify(BASE_UNIVERSES));
+  overriddenIds = new Map();
+
+  UNIVERSES.forEach(u=>{
+    u.groups.forEach(g=>{
+      g.items = g.items.map(([title,year])=>{
+        const sourceKey = buildId(u.id, g.label, title, year);
+        const ov = overrides[sourceKey];
+        if(ov){
+          overriddenIds.set(buildId(u.id, g.label, ov.title, ov.year), sourceKey);
+          return [ov.title, ov.year];
+        }
+        return [title, year];
+      });
+    });
+  });
+
+  customIds = new Set();
+  customItems.forEach(ci=>{
+    let u = UNIVERSES.find(x=>x.id === ci.universeId);
+    if(!u){
+      u = {
+        id: ci.universeId,
+        name: ci.universeName || ci.universeId,
+        eyebrow: ci.universeEyebrow || "Custom section",
+        color: ci.universeColor || colorForName(ci.universeName || ci.universeId),
+        groups: []
+      };
+      UNIVERSES.push(u);
+      activeUniverses.add(u.id);
+    }
+    let g = u.groups.find(x=>x.label.toLowerCase() === ci.group.toLowerCase());
+    if(!g){ g = {label:ci.group, items:[]}; u.groups.push(g); }
+    else { ci.group = g.label; }
+    g.items.push([ci.title, ci.year]);
+    customIds.add(buildId(u.id, g.label, ci.title, ci.year));
+  });
+}
+
+async function loadCustomItems(){
+  try{
+    const result = await storageGet(CUSTOM_KEY);
+    if(result && result.value){ customItems = JSON.parse(result.value); }
+  }catch(e){ customItems = []; }
+  rebuildUniverses();
+}
+
+async function saveCustomItems(){
+  await storageSet(CUSTOM_KEY, JSON.stringify(customItems));
+}
+
+async function loadOverrides(){
+  try{
+    const result = await storageGet(OVERRIDES_KEY);
+    if(result && result.value){ overrides = JSON.parse(result.value); }
+  }catch(e){ overrides = {}; }
+}
+
+async function saveOverrides(){
+  await storageSet(OVERRIDES_KEY, JSON.stringify(overrides));
+}
+
+function populateAddForm(){
+  updateUniverseList();
+  updateGroupList();
+  document.getElementById("addUniverse").addEventListener("input", updateGroupList);
+}
+
+function updateUniverseList(){
+  document.getElementById("universeList").innerHTML =
+    UNIVERSES.map(u=>`<option value="${escapeHtml(u.name)}">`).join("");
+}
+
+function updateGroupList(){
+  const typed = document.getElementById("addUniverse").value.trim().toLowerCase();
+  const u = UNIVERSES.find(x=>x.name.toLowerCase() === typed);
+  const list = document.getElementById("groupList");
+  list.innerHTML = u ? u.groups.map(g=>`<option value="${escapeHtml(g.label)}">`).join("") : "";
+}
+
+let lastRemovedItem = null;
+
+async function removeCustomItem(id){
+  const idx = customItems.findIndex(ci=> buildId(ci.universeId, ci.group, ci.title, ci.year) === id);
+  if(idx === -1) return;
+  lastRemovedItem = {entry: {...customItems[idx]}, wasChecked: !!checkedIds[id]};
+  document.getElementById("undoDeleteBtn").disabled = false;
+
+  customItems.splice(idx,1);
+  delete checkedIds[id];
+  await saveCustomItems();
+  await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+  rebuildUniverses();
+  renderChips();
+  updateUniverseList();
+  updateGroupList();
+  renderAll();
+}
+
+document.getElementById("undoDeleteBtn").addEventListener("click", async ()=>{
+  if(!lastRemovedItem) return;
+  customItems.push(lastRemovedItem.entry);
+  await saveCustomItems();
+  rebuildUniverses();
+  if(lastRemovedItem.wasChecked){
+    const restoredId = buildId(lastRemovedItem.entry.universeId, lastRemovedItem.entry.group, lastRemovedItem.entry.title, lastRemovedItem.entry.year);
+    checkedIds[restoredId] = true;
+    await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+  }
+  renderChips();
+  updateUniverseList();
+  updateGroupList();
+  renderAll();
+  lastRemovedItem = null;
+  document.getElementById("undoDeleteBtn").disabled = true;
+});
+
+document.getElementById("addYear").addEventListener("input", (e)=>{
+  e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 4);
+});
+
+function openPage(page, title){
+  const titles = {add:"Add title", import:"Import progress", export:"Export progress"};
+  document.getElementById("pageTitle").textContent = title || titles[page];
+  ["add","import","export"].forEach(p=>{
+    document.getElementById("page"+p[0].toUpperCase()+p.slice(1)).style.display = (p===page ? "" : "none");
+  });
+  document.getElementById("pageOverlay").classList.add("open");
+}
+function closePage(){
+  document.getElementById("pageOverlay").classList.remove("open");
+}
+document.getElementById("pageCloseBtn").addEventListener("click", ()=>{
+  if(editingMode) exitEditMode();
+  closePage();
+});
+document.getElementById("pageOverlay").addEventListener("click", (e)=>{
+  if(e.target.id === "pageOverlay"){
+    if(editingMode) exitEditMode();
+    closePage();
+  }
+});
+document.querySelectorAll(".profile-menu-item").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    document.getElementById("profileMenu").classList.remove("open");
+    if(editingMode) exitEditMode();
+    openPage(el.getAttribute("data-page"));
+  });
+});
+
+let editingId = null;
+let editingMode = null;
+let editingUniverseId = null;
+let editingGroupLabel = null;
+let editingSourceKey = null;
+
+function startEdit(id){
+  const ci = customItems.find(c => buildId(c.universeId, c.group, c.title, c.year) === id);
+  document.getElementById("addUniverse").disabled = false;
+  document.getElementById("addGroup").disabled = false;
+  if(ci){
+    editingId = id; editingMode = "custom";
+    const uni = UNIVERSES.find(u=>u.id===ci.universeId);
+    document.getElementById("addUniverse").value = uni ? uni.name : (ci.universeName || "");
+    updateGroupList();
+    document.getElementById("addGroup").value = ci.group;
+    document.getElementById("addTitle").value = ci.title;
+    document.getElementById("addYear").value = ci.year;
+  } else {
+    let foundU=null, foundG=null, foundTitle=null, foundYear=null;
+    for(const u of UNIVERSES){
+      for(const g of u.groups){
+        const hit = g.items.find(([t,y]) => buildId(u.id,g.label,t,y) === id);
+        if(hit){ foundU=u; foundG=g; foundTitle=hit[0]; foundYear=hit[1]; break; }
+      }
+      if(foundU) break;
+    }
+    if(!foundU) return;
+    editingId = id; editingMode = "builtin";
+    editingUniverseId = foundU.id; editingGroupLabel = foundG.label;
+    editingSourceKey = overriddenIds.has(id) ? overriddenIds.get(id) : id;
+    document.getElementById("addUniverse").value = foundU.name;
+    document.getElementById("addUniverse").disabled = true;
+    document.getElementById("addGroup").value = foundG.label;
+    document.getElementById("addGroup").disabled = true;
+    document.getElementById("addTitle").value = foundTitle;
+    document.getElementById("addYear").value = foundYear;
+  }
+  document.getElementById("addSubmitBtn").textContent = "Save changes";
+  document.getElementById("cancelEditBtn").style.display = "";
+  openPage("add", "Edit title");
+  document.getElementById("addTitle").focus();
+}
+
+function exitEditMode(){
+  editingId = null; editingMode = null; editingUniverseId = null; editingGroupLabel = null; editingSourceKey = null;
+  document.getElementById("addUniverse").disabled = false;
+  document.getElementById("addGroup").disabled = false;
+  document.getElementById("addSubmitBtn").textContent = "Add";
+  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("addUniverse").value = "";
+  document.getElementById("addGroup").value = "";
+  document.getElementById("addTitle").value = "";
+  document.getElementById("addYear").value = "";
+}
+
+document.getElementById("cancelEditBtn").addEventListener("click", ()=>{
+  exitEditMode();
+  closePage();
+});
+
+function resolveYearInput(rawValue){
+  const trimmed = rawValue.trim();
+  if(!trimmed) return {ok:true, year:"TBA"};
+  if(/^\d{4}$/.test(trimmed)) return {ok:true, year:trimmed};
+  return {ok:false, year:null};
+}
+
+document.getElementById("addSubmitBtn").addEventListener("click", async ()=>{
+  const title = document.getElementById("addTitle").value.trim();
+  if(!title) return;
+  const yearResult = resolveYearInput(document.getElementById("addYear").value);
+  if(!yearResult.ok){
+    await showAlert("Year must be a 4-digit number (like 2026), or left blank for TBA.");
+    return;
+  }
+  const year = yearResult.year;
+
+  if(editingMode === "builtin"){
+    const wasChecked = !!checkedIds[editingId];
+    overrides[editingSourceKey] = {title, year};
+    await saveOverrides();
+    delete checkedIds[editingId];
+    rebuildUniverses();
+    if(wasChecked){
+      checkedIds[buildId(editingUniverseId, editingGroupLabel, title, year)] = true;
+    }
+    await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+    exitEditMode();
+    closePage();
+    renderChips();
+    updateUniverseList();
+    updateGroupList();
+    renderAll();
+    return;
+  }
+
+  const typedUniverse = document.getElementById("addUniverse").value.trim();
+  const group = document.getElementById("addGroup").value.trim();
+  if(!typedUniverse || !group) return;
+
+  const existing = UNIVERSES.find(u=>u.name.toLowerCase() === typedUniverse.toLowerCase());
+  let entry;
+  if(existing){
+    entry = {universeId:existing.id, group, title, year};
+  } else {
+    let id = slugify(typedUniverse);
+    let n = 1, base = id;
+    while(UNIVERSES.some(u=>u.id===id)){ id = base+"-"+(n++); }
+    entry = {
+      universeId:id, universeName:typedUniverse, universeColor:colorForName(typedUniverse),
+      universeEyebrow:"Custom section", group, title, year
+    };
+  }
+
+  if(editingId){
+    const idx = customItems.findIndex(ci => buildId(ci.universeId, ci.group, ci.title, ci.year) === editingId);
+    if(idx !== -1){
+      const wasChecked = !!checkedIds[editingId];
+      customItems.splice(idx, 1, entry);
+      delete checkedIds[editingId];
+      if(wasChecked){
+        const newId = buildId(entry.universeId, entry.group, entry.title, entry.year);
+        checkedIds[newId] = true;
+      }
+      await storageSet(STORAGE_KEY, JSON.stringify(checkedIds));
+    }
+    exitEditMode();
+    closePage();
+  } else {
+    customItems.push(entry);
+  }
+
+  await saveCustomItems();
+  rebuildUniverses();
+  renderChips();
+  updateUniverseList();
+  updateGroupList();
+  renderAll();
+  if(!editingId){
+    document.getElementById("addTitle").value = "";
+    document.getElementById("addYear").value = "";
+  }
+});
+
+async function loadProfile(){
+  try{
+    const result = await storageGet(PROFILE_KEY);
+    if(result && result.value){ document.getElementById("profileName").value = result.value; }
+  }catch(e){ /* no saved name yet */ }
+  updateProfileAvatar();
+}
+
+function updateProfileAvatar(){
+  const name = document.getElementById("profileName").value.trim();
+  document.getElementById("profileAvatar").textContent = name ? name[0].toUpperCase() : "M";
+}
+
+let profileNameSaveTimer = null;
+document.getElementById("profileName").addEventListener("input", (e)=>{
+  updateProfileAvatar();
+  clearTimeout(profileNameSaveTimer);
+  const value = e.target.value;
+  profileNameSaveTimer = setTimeout(()=>{ storageSet(PROFILE_KEY, value); }, 400);
+});
+document.getElementById("profileName").addEventListener("blur", (e)=>{
+  clearTimeout(profileNameSaveTimer);
+  storageSet(PROFILE_KEY, e.target.value);
+});
+
+document.getElementById("profileMenuBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  document.getElementById("profileMenu").classList.toggle("open");
+});
+document.addEventListener("click", (e)=>{
+  const menu = document.getElementById("profileMenu");
+  if(menu.classList.contains("open") && !e.target.closest(".profile-menu-wrap")){
+    menu.classList.remove("open");
+  }
+});
+
+async function init(){
+  try{
+    const result = await storageGet(STORAGE_KEY);
+    if(result && result.value){ checkedIds = JSON.parse(result.value); }
+  }catch(e){ checkedIds = {}; }
+  await loadOverrides();
+  await loadCustomItems();
+  await loadProfile();
+  renderChips();
+  populateAddForm();
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>
